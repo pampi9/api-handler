@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Validation schema for output",
+  "type": "object",
+  "required": [
+    "url",
+    "status_code",
+    "response"
+  ],
+  "properties": {
+    "url": {
+      "type": "string"
+    },
+    "status_code": {
+      "type": "number"
+    },
+    "response": {
+      "$ref": "#/definitions/response"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "response": {
+      "type": "object",
+      "required": [
+        "StatusCode",
+        "Message",
+        "Payload"
+      ],
+      "properties": {
+        "StatusCode": {
+          "type": "number"
+        },
+        "Message": {
+          "type": "string"
+        },
+        "Payload": {
+          "type": [
+            "object",
+            "array",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

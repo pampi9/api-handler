@@ -1,0 +1,94 @@
+{
+  "openapi": "3.0.1",
+  "servers": [
+    {
+      "url": "http://url:1234/api/v1",
+      "description": "Sample API"
+    }
+  ],
+  "info": {
+    "version": "1.0.0",
+    "title": "Test API"
+  },
+  "paths": {
+    "/GetItems": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "List available items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getItems"
+                },
+                "example": [
+                  {
+                    "Name": "30",
+                    "UniqueName": "30"
+                  },
+                  {
+                    "Name": "31",
+                    "UniqueName": "31"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetItem": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Item Id",
+            "required": true,
+            "example": "item_id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List one given items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getItem"
+                },
+                "example": {
+                  "Name": "30",
+                  "UniqueName": "30"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "getItems": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/getItem"
+        }
+      },
+      "getItem": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          },
+          "UniqueName": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
