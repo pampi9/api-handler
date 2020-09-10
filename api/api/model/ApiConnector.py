@@ -18,13 +18,15 @@ class ApiConnector:
     UNIT_TEST = False
     UNIT_TEST_WARNING = "Method only valid with UNIT_TEST set to True"
 
-    def __init__(self, configuration_file, authentication=""):
+    def __init__(self, configuration_file, is_openapi=True, authentication=""):
         """
         API defined by configuration file with given authentication
         :param configuration_file: OpenApiSpecs file with definition of the API
+        :param is_openapi: set to False to deactivate the schema validation against OpenApi Specs standard
         :param authentication: authentication info
         """
         self.configuration_file = configuration_file
+        self.is_openapi = is_openapi
         if authentication in ApiConnector.AUTHENTICATIONS:
             self.authentication_method = authentication
             self.authentication = None
@@ -37,19 +39,28 @@ class ApiConnector:
         self.__get_resources()
 
     def create_authentication(self, username, password):
-        check = True
+        """
+        Create the authentication for the requests
+        :param username: username
+        :param password: password
+        :return: {-1, 0, 1}
+            -1: missing environment variable
+            0: no auth
+            1: auth and all needed environment variables available
+        """
+        check = 0
+        self.authentication = None
         if self.authentication_method != "":
             failures = []
             for variable in [username, password]:
                 if variable not in os.environ:
                     failures.append(variable)
-                    check = False
-            if check:
+                    check = -1
+            if check >= 0:
                 if self.authentication_method == "HTTPBasicAuth":
                     self.authentication = requests.auth.HTTPBasicAuth("{}".format(os.environ[username]),
                                                                       os.environ[password])
-                else:
-                    self.authentication = None
+                    check = 1
             else:
                 print("{} variable(s) is not defined in os.environ".format(", ".join(failures)))
         return check
@@ -74,7 +85,7 @@ class ApiConnector:
         if self.server is not None and "url" in self.server and self.paths is not None:
             endpoint_definition = self.__get_endpoint_definition(resource, request_type)
             if endpoint_definition is not None:
-                args = self.__get_request_params(endpoint_definition, parameters)
+                args = self.__get_request_params_query(endpoint_definition, parameters)
                 if args is None:
                     return "{}{}".format(self.server["url"], resource)
                 else:
@@ -128,7 +139,7 @@ class ApiConnector:
         schema_dir = os.path.abspath(
             os.path.join(os.path.dirname(sys.modules[ApiConnector.__module__].__file__), ".."))
         schema = JsonHandler.read_json("{}/schemas/OAS_schema.json".format(schema_dir))
-        if JsonHandler.validate(resources, schema, "api_definition"):
+        if not self.is_openapi or JsonHandler.validate(resources, schema, "api_definition"):
             self.resources = resources
             for (path, resource) in self.resources["paths"].items():
                 self.paths[path] = ApiOperations(resource)
@@ -146,17 +157,37 @@ class ApiConnector:
         return None
 
     @staticmethod
-    def __get_request_params(endpoint_definition, parameters=None):
+    def __extract_param(parameters, parameter):
+        if "required" in parameter and parameter["required"] and parameter["name"] not in parameters:
+            print("Required parameter '{}' is missing".format(parameter))
+            return None
+        else:
+            return {parameter["name"]: parameters[parameter["name"]]}
+
+    @staticmethod
+    def __get_formatted_param_in_query(parameters, parameter):
+        param = ApiConnector.__extract_param(parameters, parameter)
+        if param is not None:
+            return "{}={}".format(parameter["name"], parameters[parameter["name"]])
+        else:
+            return param
+
+    @staticmethod
+    def __get_formatted_param_in_path(parameters, parameter):
+        return ApiConnector.__extract_param(parameters, parameter)
+
+    @staticmethod
+    def __get_request_params_query(endpoint_definition, parameters=None):
         if parameters is None:
             parameters = {}
         args = []
-        if "parameters" in endpoint_definition:
+        if "parameters" in endpoint_definition and endpoint_definition["parameters"] is not None:
             for parameter in endpoint_definition["parameters"]:
+                # TODO: Handle parameter in header, path
                 if parameter["in"] == "query":
-                    if parameter["required"] and parameter["name"] not in parameters:
-                        print("Required parameter '{}' is missing".format(parameter))
-                    elif parameter["name"] in parameters:
-                        args.append("{}={}".format(parameter["name"], parameters[parameter["name"]]))
+                    arg = ApiConnector.__get_formatted_param_in_query(parameters, parameter)
+                    if arg is not None:
+                        args.append(arg)
         if len(args) == 0:
             return None
         else:
@@ -194,12 +225,12 @@ class ApiConnector:
             print(ApiConnector.UNIT_TEST_WARNING)
 
     @staticmethod
-    def get_request_params(endpoint_definition, parameters=None):
+    def get_request_params_query(endpoint_definition, parameters=None):
         """
         Public access for unit test
         """
         if ApiConnector.UNIT_TEST:
-            return ApiConnector.__get_request_params(endpoint_definition, parameters)
+            return ApiConnector.__get_request_params_query(endpoint_definition, parameters)
         else:
             print(ApiConnector.UNIT_TEST_WARNING)
 

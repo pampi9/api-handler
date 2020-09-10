@@ -1,5 +1,7 @@
 {
   "get": {
+    "parameters": null,
+    "requestBody": null,
     "responses": {
       "200": {
         "description": "List available items",

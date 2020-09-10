@@ -2,6 +2,10 @@
 .idea/
 scripts/scripts_windows/set_proxy.bat
 
+# Coverage
+api/htmlcov
+api/.coverage
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

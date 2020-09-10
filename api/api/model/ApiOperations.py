@@ -12,8 +12,11 @@ class ApiOperations:
         if parts is None:
             parts = ["parameters", "responses", "requestBody"]
         self.operations = {}
+        default_operation = {}
+        for part in parts:
+            default_operation[part] = None
         for (method, details) in resource.items():
-            self.operations[method] = {}
+            self.operations[method] = default_operation
             for part in parts:
                 if part in details:
                     self.operations[method][part] = details[part]
