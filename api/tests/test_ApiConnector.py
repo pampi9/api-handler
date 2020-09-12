@@ -88,23 +88,24 @@ def test_mock_response():
     response = MockResponse({"key1": "value1"}, 200)
     assert ApiConnector.process_response("test_url", response) == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 1, 'Message': 'dict', 'Payload': {'key1': 'value1'}}
+        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {'key1': 'value1'}}
     }
 
     response = MockResponse({}, 200)
     assert ApiConnector.process_response("test_url", response) == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 1, 'Message': 'dict', 'Payload': {}}
+        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {}}
     }
 
     response = MockResponse([], 200)
     assert ApiConnector.process_response("test_url", response) == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 1, 'Message': 'list', 'Payload': []}
+        'response': {'StatusCode': 200, 'Message': 'OK: list', 'Payload': []}
     }
 
     response = MockResponse("", 200)
+    print(ApiConnector.process_response("test_url", response))
     assert ApiConnector.process_response("test_url", response) == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 1, 'Message': '', 'Payload': ''}
+        'response': {'StatusCode': 204, 'Message': 'No content: empty response', 'Payload': ''}
     }

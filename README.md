@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # Set authentication
     os.environ["username"] = "my_user_name"
     os.environ["password"] = "my_password"
-    my_authentication = api.create_authentication("username", "password")
+    my_authentication = api.__create_authentication("username", "password")
     # Select server
     api.select_server_by_description("description for server in specs")
 

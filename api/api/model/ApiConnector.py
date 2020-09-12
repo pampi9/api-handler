@@ -7,6 +7,7 @@ from .ApiOperations import ApiOperations
 from .ApiResponse import ApiResponse
 from .ApiResponse import MockResponse
 from .JsonHandler import JsonHandler
+from ..exceptions import OpenApiDefinitionException
 
 
 class ApiConnector:
@@ -97,6 +98,23 @@ class ApiConnector:
         api_response = ApiResponse(url, response)
         return api_response.to_object()
 
+    def check_definition(self, url, resource, request_type, status_code):
+        try:
+            if resource not in self.resources["paths"]:
+                raise OpenApiDefinitionException.EndpointException(
+                    "Endpoint {} is missing.".format(resource))
+            if request_type not in self.resources["paths"][resource]:
+                raise OpenApiDefinitionException.RequestTypeException(
+                    "Request type {}:{} is missing.".format(resource, request_type))
+            if status_code not in self.resources["paths"][resource][request_type]["responses"]:
+                raise OpenApiDefinitionException.StatusCodeException(
+                    "Status code {}:{}:{} is missing.".format(resource, request_type, status_code))
+            return True
+        except OpenApiDefinitionException.DefinitionException as e:
+            print("Url: {}".format(url))
+            print("Error message: {}".format(e))
+            return False
+
     def run_request(self, resource, request_type, parameters, body=None):
         """ Send a request to the url """
         url = self.__get_url(resource, request_type, parameters)
@@ -107,15 +125,19 @@ class ApiConnector:
                 else:
                     response = None
                 # Generate schema
-                schema = self.__get_response_schema_path(
-                    self.resources["paths"][resource][request_type], str(response.status_code), "application/json")
-                schema["components"] = {}
-                schema["components"]["schemas"] = self.resources["components"]["schemas"]
-                # Process response
-                output = self.process_response(url, response)
-                # Validate against schema
-                if not JsonHandler.validate(output["response"]["Payload"], schema, "response"):
-                    print("Response doesn't correspond to predefined schema! {}".format(output["response"]["Payload"]))
+                if self.check_definition(url, resource, request_type, str(response.status_code)):
+                    schema = self.__get_response_schema_path(
+                        self.resources["paths"][resource][request_type], str(response.status_code), "application/json")
+                    schema["components"] = {}
+                    schema["components"]["schemas"] = self.resources["components"]["schemas"]
+                    # Process response
+                    output = self.process_response(url, response)
+                    # Validate against schema
+                    if not JsonHandler.validate(output["response"]["Payload"], schema, "response"):
+                        print("Response doesn't correspond to predefined schema! {}".format(
+                            output["response"]["Payload"]))
+                else:
+                    output = response.json()
             except (requests.exceptions.InvalidURL, requests.exceptions.ConnectionError) as ex:
                 # TODO: Adjust response for Exception handling
                 response = MockResponse({}, 500)

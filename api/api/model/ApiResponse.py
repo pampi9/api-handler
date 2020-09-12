@@ -4,6 +4,7 @@ import sys
 from .JsonHandler import JsonHandler
 
 
+# Response codes: https://tools.ietf.org/html/rfc7231#section-6.3
 class ApiResponse:
     def __init__(self, url, response, error=False, error_message=""):
         """
@@ -14,7 +15,7 @@ class ApiResponse:
         self.url = url
         self.status_code = response.status_code
         self.content = response.json()
-        self.is_empty = (response == "")
+        self.is_empty = (response.json() == "")
         self.is_error = error
         self.error_message = error_message
         schema_dir = os.path.abspath(
@@ -23,19 +24,21 @@ class ApiResponse:
 
     def to_object(self):
         content = {"url": self.url, "status_code": self.status_code,
-                   "response": {"StatusCode": 1, "Message": "", "Payload": self.content}
+                   "response": {"StatusCode": 200, "Message": "", "Payload": self.content}
                    }
         if self.is_error:
-            content["response"]["StatusCode"] = -1
-            content["response"]["Message"] = self.error_message
+            content["response"]["StatusCode"] = 504
+            content["response"]["Message"] = "Gateway timeout: {}".format(self.error_message)
         elif self.is_empty:
-            content["response"]["StatusCode"] = 0
-            content["response"]["Message"] = "empty"
+            content["response"]["StatusCode"] = 204
+            content["response"]["Message"] = "No content: empty response"
         else:
             if isinstance(self.content, list):
-                content["response"]["Message"] = "list"
+                content["response"]["Message"] = "OK: list"
             elif isinstance(self.content, dict):
-                content["response"]["Message"] = "dict"
+                content["response"]["Message"] = "OK: dict"
+            else:
+                content["response"]["Message"] = "OK"
         if not JsonHandler.validate(content, self.schema):
             print("Request std output is not valid against defined schema!")
         return content
