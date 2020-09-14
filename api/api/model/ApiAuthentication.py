@@ -20,8 +20,6 @@ class ApiAuthentication:
             self.authentication_method = authentication_method
             if self.__check_parameters(parameters):
                 self.__create_authentication(parameters)
-            else:
-                raise AuthenticationException("Missing parameters for {} authentication.".format(authentication_method))
         else:
             print("Only {} are available.".format(ApiAuthentication.AUTHENTICATIONS))
             raise AuthenticationException("{} is not implemented.".format(authentication_method))

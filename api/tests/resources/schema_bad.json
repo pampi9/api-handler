@@ -1,7 +1,11 @@
 {
-  "type": "array",
+  "type": "arra",
   "items": {
     "type": "object",
+    "required": [
+      "Name",
+      "UniqueName"
+    ],
     "properties": {
       "Name": {
         "type": "string"

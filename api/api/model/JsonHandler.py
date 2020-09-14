@@ -52,17 +52,18 @@ class JsonHandler:
 
     @staticmethod
     def validate(json_object, json_schema, validation_type=None):
+        # TODO: check us of validation (True/False, "Error msg")
         """
         Validate jsonObject against jsonSchema
         :param json_object:
         :param json_schema:
         :param validation_type: [None, "api_definition", "body", "response"]
-        :return:
+        :return: (True/False, error_message)
         """
         try:
             try:
                 jsonschema.validate(json_object, json_schema)
-                return True
+                return True, ""
             except jsonschema.exceptions.ValidationError as e:
                 message = "ValidationError - {}: {}".format(validation_type, e.message)
                 if validation_type == "api_definition":
@@ -74,8 +75,6 @@ class JsonHandler:
                 else:
                     raise ValidationException(message)
             except jsonschema.exceptions.SchemaError as e:
-                print("SchemaError: {}".format(e))
-                return False
-        except (ApiDefinitionValidationException, BodyValidationException, ResponseValidationException) as e:
-            print(e.message)
-            return False
+                return False, "SchemaError: {}".format(e)
+        except ValidationException as e:
+            return False, str(e)

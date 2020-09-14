@@ -1,0 +1,18 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "Name",
+      "UniqueName"
+    ],
+    "properties": {
+      "Name": {
+        "type": "string"
+      },
+      "UniqueName": {
+        "type": "string"
+      }
+    }
+  }
+}
