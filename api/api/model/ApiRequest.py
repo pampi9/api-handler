@@ -166,8 +166,8 @@ class ApiRequest:
         try:
             if self.check_response(str(response.status_code)):
                 schema = self.__get_response_schema(str(response.status_code), "application/json")
-                if "components" in schema and "schemas" in schema["components"]:
-                    schema["components"] = {}
+                schema["components"] = {"schemas": {}}
+                if self.components is not None and "schemas" in self.components:
                     schema["components"]["schemas"] = self.components["schemas"]
                 # Validate against schema
                 if not JsonHandler.validate(output["response"]["Payload"], schema, "response")[0]:
