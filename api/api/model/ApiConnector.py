@@ -18,6 +18,7 @@ class ApiConnector:
         :param configuration_file: OpenApiSpecs file with definition of the API
         :param is_openapi: set to False to deactivate the schema validation against OpenApi Specs standard
         :param authentication: authentication info
+        :param parameters: parameters to initialize the authentication
         """
         self.configuration_file = configuration_file
         self.is_openapi = is_openapi
@@ -70,11 +71,3 @@ class ApiConnector:
         else:
             print("Resource '{}' not defined".format(resource))
         return None
-
-# "post": {
-#   "RequestBody": {
-#       "content": "application/json"
-#       "schema": {
-#           $ref: "#/components/schemas/User"
-#       }
-#   }

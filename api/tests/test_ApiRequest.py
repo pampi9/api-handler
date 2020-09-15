@@ -7,6 +7,9 @@ from api.model.ApiResponse import MockResponse
 RESOURCES = {
     "existing_api": "tests/resources/Api.json"
 }
+GET_ITEM_ENDPOINT = "/GetItem"
+GET_ITEMS_ENDPOINT = "/GetItems"
+MISSING_ENDPOINT = "/GetItem_bad"
 
 
 def create_api_request(endpoint, method_type="get", server_description="Sample API"):
@@ -19,7 +22,7 @@ def test_build_get_request_missing_definition():
     """
     Test create of request
     """
-    api_request = create_api_request("/GetItem_bad")
+    api_request = create_api_request(MISSING_ENDPOINT)
     assert api_request is None
 
 
@@ -27,7 +30,7 @@ def test_build_get_request_missing_parameter():
     """
     Test Building of URL
     """
-    api_request = create_api_request("/GetItem")
+    api_request = create_api_request(GET_ITEM_ENDPOINT)
     parameters = {"id": "my_id"}
     err_message = ""
     try:
@@ -41,7 +44,7 @@ def test_build_get_request_all_required_parameters():
     """
     Test Building of URL
     """
-    api_request = create_api_request("/GetItem")
+    api_request = create_api_request(GET_ITEM_ENDPOINT)
     parameters = {"id": "my_id", "name": "my_name"}
     assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItem?id=my_id&name=my_name"
 
@@ -50,7 +53,7 @@ def test_build_get_request_with_no_parameters():
     """
     Test Building of URL
     """
-    api_request = create_api_request("/GetItems")
+    api_request = create_api_request(GET_ITEMS_ENDPOINT)
     parameters = None
     assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItems"
 
@@ -59,7 +62,7 @@ def test_build_get_request_no_server():
     """
     Test Building of URL
     """
-    api_request = create_api_request("/GetItems", server_description="")
+    api_request = create_api_request(GET_ITEMS_ENDPOINT, server_description="")
     assert api_request.build_url() is None
 
 
@@ -104,7 +107,7 @@ def test_get_formatted_param_in_query():
 
 
 def test_get_request():
-    api_request = create_api_request("/GetItem")
+    api_request = create_api_request(GET_ITEM_ENDPOINT)
     parameters = {"id": "my_id", "name": "my_name"}
     url = api_request.build_url(parameters)
     response = api_request.call(url)
@@ -117,32 +120,49 @@ def test_get_request():
 
 
 def test_mock_response():
+    my_endpoint = {"responses": {
+        "200": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": ["string", "array", "dict"]
+                    }
+                }
+            }
+        }
+    }}
     api_request = ApiRequest(
         server=None,
-        endpoint_definition={"responses": {"200": {}}},
+        endpoint_definition=my_endpoint,
         endpoint=None
     )
 
-    response = MockResponse({"key1": "value1"}, 200)
-    assert api_request.process_response("test_url", response, error_flag=False) == {
+    mock_response = MockResponse({"key1": "value1"}, 200)
+    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
         'url': 'test_url', 'status_code': 200,
         'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {'key1': 'value1'}}
     }
 
-    response = MockResponse({}, 200)
-    assert api_request.process_response("test_url", response, error_flag=False) == {
+    mock_response = MockResponse({}, 200)
+    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
         'url': 'test_url', 'status_code': 200,
         'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {}}
     }
 
-    response = MockResponse([], 200)
-    assert api_request.process_response("test_url", response, error_flag=False) == {
+    mock_response = MockResponse([], 200)
+    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
         'url': 'test_url', 'status_code': 200,
         'response': {'StatusCode': 200, 'Message': 'OK: list', 'Payload': []}
     }
 
-    response = MockResponse("", 200)
-    assert api_request.process_response("test_url", response, error_flag=False) == {
+    mock_response = MockResponse("", 200)
+    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
         'url': 'test_url', 'status_code': 200,
         'response': {'StatusCode': 204, 'Message': 'No content: empty response', 'Payload': ''}
+    }
+
+    mock_response = MockResponse(None, 200)
+    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
+        'url': 'test_url', 'status_code': 200,
+        'response': {'StatusCode': 200, 'Message': 'OK', 'Payload': None}
     }

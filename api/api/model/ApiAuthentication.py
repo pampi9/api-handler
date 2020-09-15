@@ -7,12 +7,23 @@ from ..exceptions.AuthenticationException import AuthenticationException
 
 
 class ApiAuthentication:
+    """
+    Class for the handling of the authentication
+    """
+    # TODO: implement OAuth2.0
     AUTHENTICATIONS = ["HTTPBasicAuth", None]
     AUTHENTICATIONS_PARAMETERS = {
         "HTTPBasicAuth": ["username", "password"]
     }
 
     def __init__(self, authentication_method=None, parameters=None):
+        """
+        ApiAuthentication constructor
+        :param authentication_method: method to use (listed in ApiAuthentication.AUTHENTICATIONS)
+        :param parameters: dictionary
+            with key from the array ApiAuthentication.AUTHENTICATIONS_PARAMETERS[authentication_method]
+            and value the key of the os.environ, where the data are put in
+        """
         if parameters is None:
             parameters = {}
         self.authentication = None
@@ -59,7 +70,7 @@ class ApiAuthentication:
 
     def __create_authentication_basic_auth(self, parameters):
         """
-        Create the authentication for the requests
+        Create the authentication for the requests (implementation of HTTPBasicAuth)
         :param parameters: parameters for authentication
         """
         self.authentication = requests.auth.HTTPBasicAuth(

@@ -12,15 +12,15 @@ from ..exceptions.ValidationException import ValidationException
 
 class JsonHandler:
     """
-    Read/write the metadata
+    Read/write a json file
     """
 
     @staticmethod
     def read_json(filename):
         """
         Import the json file
-        :param filename:
-        :return:
+        :param filename: path of the file
+        :return: Python object
         """
         try:
             with open(filename, 'r') as json_file:
@@ -35,7 +35,13 @@ class JsonHandler:
 
     @staticmethod
     def write_json(filename, json_object, overwrite=False):
-        """ Export the json object to a json file """
+        """
+        Export the json object to a json file
+        :param filename: path of the file
+        :param json_object: Python object
+        :param overwrite: if True, overwrite
+        :return: True if the writing process ended successfully
+        """
         try:
             saved_content = JsonHandler.read_json(filename)
             if overwrite or (saved_content == {}):
@@ -55,8 +61,8 @@ class JsonHandler:
         # TODO: check us of validation (True/False, "Error msg")
         """
         Validate jsonObject against jsonSchema
-        :param json_object:
-        :param json_schema:
+        :param json_object: json object to check
+        :param json_schema: json schema to use for the validation
         :param validation_type: [None, "api_definition", "body", "response"]
         :return: (True/False, error_message)
         """
