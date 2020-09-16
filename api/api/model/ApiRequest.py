@@ -3,11 +3,9 @@ import requests
 from .ApiResponse import ApiResponse
 from .ApiResponse import MockResponse
 from .JsonHandler import JsonHandler
+from .OpenApi2JsonConverter import Openapi2JsonConverter
 from ..exceptions import OpenApiDefinitionException
-from ..exceptions.OpenApiDefinitionException import StatusCodeException
-from ..exceptions.RequestException import IgnoredParameterException
-from ..exceptions.RequestException import MissingRequiredParameterException
-from ..exceptions.RequestException import RequestAbortedException
+from ..exceptions import RequestException
 
 
 class ApiRequest:
@@ -17,15 +15,18 @@ class ApiRequest:
     """
     REQUEST_TYPES = ["get", "post", "put", "delete"]
 
-    def __init__(self, server, endpoint_definition, endpoint):
+    def __init__(self, server, authentication, endpoint_definition, endpoint):
         """
         ApiRequest constructor
         :param server: server bloc of ApiConnector {"url":<something>, "description":<something>}
+        :param authentication: ApiAuthentication object
         :param endpoint_definition: one endpoint description out of the ApiConnector
         :param endpoint: endpoint key (string) from paths (OpenApi Specs)
         """
         # Server
         self.server = server
+        # Authentication
+        self.authentication = authentication
         # Path
         self.endpoint = endpoint
         # Endpoint definition
@@ -58,13 +59,13 @@ class ApiRequest:
         request = None
         if endpoint_definition is not None and request_type in ApiRequest.REQUEST_TYPES:
             if request_type == "post":
-                request = ApiPostRequest(server, endpoint_definition, endpoint)
+                request = ApiPostRequest(server, api.authentication, endpoint_definition, endpoint)
             elif request_type == "get":
-                request = ApiGetRequest(server, endpoint_definition, endpoint)
+                request = ApiGetRequest(server, api.authentication, endpoint_definition, endpoint)
             elif request_type == "put":
-                request = ApiPutRequest(server, endpoint_definition, endpoint)
+                request = ApiPutRequest(server, api.authentication, endpoint_definition, endpoint)
             elif request_type == "delete":
-                request = ApiDeleteRequest(server, endpoint_definition, endpoint)
+                request = ApiDeleteRequest(server, api.authentication, endpoint_definition, endpoint)
             if request is not None:
                 request.request_type = request_type
                 if "components" in api.resources:
@@ -119,8 +120,8 @@ class ApiRequest:
         try:
             ApiRequest.extract_parameter(parameters, parameter)
             return "{}={}".format(parameter["name"], parameters[parameter["name"]])
-        except (MissingRequiredParameterException, IgnoredParameterException) as e:
-            raise RequestAbortedException(str(e))
+        except (RequestException.MissingRequiredParameterException, RequestException.IgnoredParameterException) as e:
+            raise RequestException.RequestAbortedException(str(e))
 
     @staticmethod
     def extract_parameter(parameters, parameter):
@@ -133,10 +134,11 @@ class ApiRequest:
             or if
         """
         if "required" in parameter and parameter["required"] and parameter["name"] not in parameters:
-            raise MissingRequiredParameterException("Required parameter '{}' is missing!".format(parameter["name"]))
+            raise RequestException.MissingRequiredParameterException(
+                "Required parameter '{}' is missing!".format(parameter["name"]))
         elif parameter["name"] not in parameters:
             # TODO: check if additional parameter is given (not in OpenApi Specs)
-            raise IgnoredParameterException("Parameter '{}' is ignored!".format(parameter["name"]))
+            raise RequestException.IgnoredParameterException("Parameter '{}' is ignored!".format(parameter["name"]))
         else:
             return {parameter["name"]: parameters[parameter["name"]]}
 
@@ -171,11 +173,12 @@ class ApiRequest:
                     schema["components"]["schemas"] = self.components["schemas"]
                 # Validate against schema
                 if not JsonHandler.validate(output["response"]["Payload"], schema, "response")[0]:
-                    print("Response doesn't correspond to predefined schema! {}".format(
-                        output["response"]["Payload"]))
+                    output["response"]["Message"] = "WARNING: {}".format(
+                        "Response doesn't correspond to predefined schema!"
+                    )
             else:
                 output["response"]["Payload"] = response.json()
-        except StatusCodeException:
+        except OpenApiDefinitionException.StatusCodeException:
             print("No schema found for validation of status_code {}!".format(response.status_code))
         return output
 
@@ -190,19 +193,20 @@ class ApiRequest:
         if "responses" in self.endpoint_definition and status_code in self.endpoint_definition["responses"]:
             if "content" in self.endpoint_definition["responses"][status_code] \
                     and result_type in self.endpoint_definition["responses"][status_code]["content"]:
-                output = self.endpoint_definition["responses"][status_code]["content"][result_type]["schema"]
+                output = Openapi2JsonConverter.convert_open_api_specs_to_json_schema(
+                    self.endpoint_definition["responses"][status_code]["content"][result_type]["schema"]
+                )
             else:
                 print("Response type {} undefined!".format(result_type))
         else:
             print("Status code {} undefined!".format(status_code))
         return output
 
-    def call(self, url, body=None, authentication=None):
+    def call(self, url, body=None):
         """
         Process the API call
         :param url: url to call
         :param body: body to send
-        :param authentication: authentication to use
         :return: std response
         """
         # Empty because this is only the interface definition
@@ -214,7 +218,7 @@ class ApiPostRequest(ApiRequest):
     Post handler
     """
 
-    def call(self, url, body=None, authentication=None):
+    def call(self, url, body=None):
         # TODO: implement for POST request
         pass
 
@@ -224,10 +228,10 @@ class ApiGetRequest(ApiRequest):
     Get handler
     """
 
-    def call(self, url, body=None, authentication=None):
+    def call(self, url, body=None):
         if url is not None:
             try:
-                response = requests.get(url=url, auth=authentication)
+                response = requests.get(url=url, auth=self.authentication.authentication_func)
                 error_flag = False
             except (requests.exceptions.InvalidURL, requests.exceptions.ConnectionError):
                 # TODO: Adjust response for Exception handling
@@ -244,7 +248,7 @@ class ApiPutRequest(ApiRequest):
     Put handler
     """
 
-    def call(self, url, body=None, authentication=None):
+    def call(self, url, body=None):
         # TODO: implement for PUT request
         pass
 
@@ -254,6 +258,6 @@ class ApiDeleteRequest(ApiRequest):
     Delete handler
     """
 
-    def call(self, url, body=None, authentication=None):
+    def call(self, url, body=None):
         # TODO: implement for DELETE request
         pass

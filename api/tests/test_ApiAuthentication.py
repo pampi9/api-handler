@@ -73,6 +73,6 @@ def test_constructor_authentication_basic_auth_all_environ_variables():
     try:
         api = ApiAuthentication(authentication_method="HTTPBasicAuth", parameters=my_parameters)
         authentication_check = True
-        assert isinstance(api.authentication, requests.auth.HTTPBasicAuth)
+        assert isinstance(api.authentication_func, requests.auth.HTTPBasicAuth)
     finally:
         assert authentication_check

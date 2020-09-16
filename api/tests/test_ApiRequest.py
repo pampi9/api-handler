@@ -1,5 +1,6 @@
 from api.exceptions.RequestException import MissingRequiredParameterException
 from api.exceptions.RequestException import RequestAbortedException
+from api.model.ApiAuthentication import ApiAuthentication
 from api.model.ApiConnector import ApiConnector
 from api.model.ApiRequest import ApiRequest
 from api.model.ApiResponse import MockResponse
@@ -119,50 +120,63 @@ def test_get_request():
     assert response["response"]["Payload"] == {}
 
 
-def test_mock_response():
-    my_endpoint = {"responses": {
-        "200": {
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": ["string", "array", "dict"]
+def create_mock_response(response, type):
+    if type in ["string", "object", "array"]:
+        my_endpoint = {"responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "anyOf": [
+                                {"type": type, "nullable": True}
+                            ]
+                        }
                     }
                 }
             }
-        }
-    }}
-    api_request = ApiRequest(
-        server=None,
-        endpoint_definition=my_endpoint,
-        endpoint=None
-    )
+        }}
+        api_request = ApiRequest(
+            server=None,
+            authentication=ApiAuthentication(),
+            endpoint_definition=my_endpoint,
+            endpoint=None
+        )
 
-    mock_response = MockResponse({"key1": "value1"}, 200)
-    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
+        mock_response = MockResponse(response, 200)
+        print(mock_response.json())
+        return api_request.process_response("test_url", mock_response, error_flag=False)
+    else:
+        return None
+
+
+def test_mock_response_dict():
+    payload = {"key1": "value1"}
+    assert create_mock_response(payload, "object") == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {'key1': 'value1'}}
+        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': payload}
     }
 
-    mock_response = MockResponse({}, 200)
-    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
+
+def test_mock_response_empty_dict():
+    payload = {}
+    assert create_mock_response(payload, "object") == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': {}}
+        'response': {'StatusCode': 200, 'Message': 'OK: dict', 'Payload': payload}
     }
 
-    mock_response = MockResponse([], 200)
-    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
+
+def test_mock_response_array():
+    payload = []
+    assert create_mock_response(payload, "array") == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 200, 'Message': 'OK: list', 'Payload': []}
+        'response': {'StatusCode': 200, 'Message': 'OK: list', 'Payload': payload}
     }
 
-    mock_response = MockResponse("", 200)
-    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
-        'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 204, 'Message': 'No content: empty response', 'Payload': ''}
-    }
 
-    mock_response = MockResponse(None, 200)
-    assert api_request.process_response("test_url", mock_response, error_flag=False) == {
+def test_mock_response_empty_string():
+    payload = ""
+    print(create_mock_response(payload, "string"))
+    assert create_mock_response(payload, "string") == {
         'url': 'test_url', 'status_code': 200,
-        'response': {'StatusCode': 200, 'Message': 'OK', 'Payload': None}
+        'response': {'StatusCode': 204, 'Message': 'No content: empty response', 'Payload': payload}
     }

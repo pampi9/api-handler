@@ -61,6 +61,12 @@ class ApiConnector:
                 self.paths[path] = ApiOperations(resource)
 
     def get_endpoint_definition(self, resource, request_type):
+        """
+        Extract the endpoint definition
+        :param resource: endpoint path
+        :param request_type: type of the request (get, post, ...)
+        :return: Part of the OpenApi Specs for the endpoint
+        """
         if resource in self.paths:
             # endpoint
             if request_type in self.paths[resource].operations:

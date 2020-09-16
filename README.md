@@ -1,31 +1,65 @@
 # api-handler
-Python API handling based on a yaml configuration file (OpenAPI Specification 3.0.3).
+Python API handling based on a json configuration file (OpenAPI Specification 3.0.3).
+
+# Uses
+| Code | License |
+| --- | --- |
+| [py-openapi-schema-to-json-schema](https://github.com/pglass/py-openapi-schema-to-json-schema) | MIT license |
 
 # Content
 - API-server mock
 - API-client
 
-# Structure of API connector
-## Constructor of the instance:
-- Required
-  - configuration_file: url of the json containing the OpenApiSpecs of the API
-- Optional
-  - authentication: choice of the authentication mode against the API (default None)
-## Select server instance (`select_server_by_description`):
-- Required
-  - description: value of the description field
-- Return True if selection was successful (`server` variable contains the json object) 
-## Create authentication object (`create_authentication`):
-- Required
-  - username (string)
-  - password (string)
-## Run a request (`run_request`):
-- Required
-  - resource: endpoint path
-  - request_type: type of the request (get, post, ...)
-  - parameters: array of key/value
-- Optional
-  - payload: json input for payload
+# Structure of `ApiConnector`
+## `__init__`:
+Required
+  - `str` configuration_file: path of the json containing the OpenApiSpecs of the API
+
+Optional
+  - `bool` is_openapi (default: True): The constructor checks the configuration file \
+        against the OpenApi Specs schema
+  - `str` authentication (default: None): choice of the authentication mode \
+        against the API \
+        (Actually implemented: "HTTPBasicAuth", None)
+  - `dict` parameters (default: None): additional parameters for the authentication \
+        (dictionary with \
+        the key given by the authentication selected and \
+        the value with the os.environ["variable"] you choose to store their value)
+
+## `select_server_by_description`:
+Required
+  - `str` description: value of the description field \
+        (in the servers part, each entry should have an url and a description value)
+
+Return
+  - True if selection was successful (`self.server` variable contains the json object) 
+
+# Structure of `ApiRequest`
+## `ApiRequest.create_request`:
+Required
+  - `ApiConnector` api: ApiConnector object
+  - `str` endpoint: name of the endpoint
+  - `str` method_type: selected method to use for the request
+
+Return
+  - a configured ApiRequest object
+
+## `build_url`:
+Optional:
+  - `dict` parameters (default: None): (key, value) pairs of parameters \
+        to include in the url
+
+Return
+  - The url string to call
+
+## Run a request (`call`):
+url, body=None, authentication=None
+Required
+  - url: url to call in the api call
+
+Optional
+  - `object` body: json input for the body of the request
+  - authentication
 
 # Sample
 ```python

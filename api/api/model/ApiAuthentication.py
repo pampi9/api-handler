@@ -26,7 +26,7 @@ class ApiAuthentication:
         """
         if parameters is None:
             parameters = {}
-        self.authentication = None
+        self.authentication_func = None
         if authentication_method in ApiAuthentication.AUTHENTICATIONS:
             self.authentication_method = authentication_method
             if self.__check_parameters(parameters):
@@ -64,7 +64,7 @@ class ApiAuthentication:
         Create the authentication for the requests
         :param parameters: parameters for authentication
         """
-        self.authentication = None
+        self.authentication_func = None
         if self.authentication_method == "HTTPBasicAuth":
             self.__create_authentication_basic_auth(parameters)
 
@@ -73,7 +73,7 @@ class ApiAuthentication:
         Create the authentication for the requests (implementation of HTTPBasicAuth)
         :param parameters: parameters for authentication
         """
-        self.authentication = requests.auth.HTTPBasicAuth(
+        self.authentication_func = requests.auth.HTTPBasicAuth(
             "{}".format(os.environ[parameters["username"]]),
             os.environ[parameters["password"]]
         )
