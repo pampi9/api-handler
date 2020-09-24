@@ -219,8 +219,18 @@ class ApiPostRequest(ApiRequest):
     """
 
     def call(self, url, body=None):
-        # TODO: implement for POST request
-        pass
+        if url is not None:
+            try:
+                response = requests.post(url=url, json=body, auth=self.authentication.authentication_func)
+                error_flag = False
+            except (requests.exceptions.InvalidURL, requests.exceptions.ConnectionError):
+                # TODO: Adjust response for Exception handling
+                response = MockResponse({}, 500)
+                error_flag = True
+        else:
+            response = None
+            error_flag = True
+        return self.process_response(url, response, error_flag)
 
 
 class ApiGetRequest(ApiRequest):

@@ -24,5 +24,31 @@
         }
       }
     }
+  },
+  "post": {
+    "parameters": null,
+    "requestBody": null,
+    "responses": {
+      "200": {
+        "description": "List available items",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/getItems"
+            },
+            "example": [
+              {
+                "Name": "30",
+                "UniqueName": "30"
+              },
+              {
+                "Name": "31",
+                "UniqueName": "31"
+              }
+            ]
+          }
+        }
+      }
+    }
   }
 }

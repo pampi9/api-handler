@@ -19,52 +19,62 @@ def create_api_request(endpoint, method_type="get", server_description="Sample A
     return ApiRequest.create_request(api, endpoint, method_type)
 
 
-def test_build_get_request_missing_definition():
+def test_build_request_missing_definition():
     """
     Test create of request
     """
-    api_request = create_api_request(MISSING_ENDPOINT)
-    assert api_request is None
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(MISSING_ENDPOINT, method_type=method_type)
+        assert api_request is None
 
 
-def test_build_get_request_missing_parameter():
+def test_build_request_missing_parameter():
     """
     Test Building of URL
     """
-    api_request = create_api_request(GET_ITEM_ENDPOINT)
-    parameters = {"id": "my_id"}
-    err_message = ""
-    try:
-        print(api_request.build_url(parameters))
-    except RequestAbortedException as e:
-        err_message = str(e)
-    assert err_message == "Parameter 'name' is ignored!"
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(GET_ITEM_ENDPOINT, method_type=method_type)
+        parameters = {"id": "my_id"}
+        err_message = ""
+        try:
+            print(api_request.build_url(parameters))
+        except RequestAbortedException as e:
+            err_message = str(e)
+        assert err_message == "Parameter 'name' is ignored!"
 
 
-def test_build_get_request_all_required_parameters():
+def test_build_request_all_required_parameters():
     """
     Test Building of URL
     """
-    api_request = create_api_request(GET_ITEM_ENDPOINT)
-    parameters = {"id": "my_id", "name": "my_name"}
-    assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItem?id=my_id&name=my_name"
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(GET_ITEM_ENDPOINT, method_type=method_type)
+        parameters = {"id": "my_id", "name": "my_name"}
+        assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItem?id=my_id&name=my_name"
 
 
-def test_build_get_request_with_no_parameters():
+def test_build_request_with_no_parameters():
     """
     Test Building of URL
     """
-    api_request = create_api_request(GET_ITEMS_ENDPOINT)
-    parameters = None
-    assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItems"
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(GET_ITEMS_ENDPOINT, method_type=method_type)
+        parameters = None
+        assert api_request.build_url(parameters) == "http://url:1234/api/v1/GetItems"
 
 
-def test_build_get_request_no_server():
+def test_build_request_no_server():
     """
     Test Building of URL
     """
-    api_request = create_api_request(GET_ITEMS_ENDPOINT, server_description="")
-    assert api_request.build_url() is None
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(GET_ITEMS_ENDPOINT, server_description="", method_type=method_type)
+        assert api_request.build_url() is None
 
 
 def create_parameters():
@@ -108,27 +118,29 @@ def test_get_formatted_param_in_query():
 
 
 def test_get_request():
-    api_request = create_api_request(GET_ITEM_ENDPOINT)
-    parameters = {"id": "my_id", "name": "my_name"}
-    url = api_request.build_url(parameters)
-    response = api_request.call(url)
-    print("url", url)
-    print("response", response)
-    assert response["status_code"] == 500
-    assert response["response"]["StatusCode"] == 504
-    assert response["response"]["Message"] == "Gateway timeout: "
-    assert response["response"]["Payload"] == {}
+    # TODO: add put and delete request
+    for method_type in ["get", "post"]:
+        api_request = create_api_request(GET_ITEM_ENDPOINT, method_type=method_type)
+        parameters = {"id": "my_id", "name": "my_name"}
+        url = api_request.build_url(parameters)
+        response = api_request.call(url)
+        print("url", url)
+        print("response", response)
+        assert response["status_code"] == 500
+        assert response["response"]["StatusCode"] == 504
+        assert response["response"]["Message"] == "Gateway timeout: "
+        assert response["response"]["Payload"] == {}
 
 
-def create_mock_response(response, type):
-    if type in ["string", "object", "array"]:
+def create_mock_response(response, datatype):
+    if datatype in ["string", "object", "array"]:
         my_endpoint = {"responses": {
             "200": {
                 "content": {
                     "application/json": {
                         "schema": {
                             "anyOf": [
-                                {"type": type, "nullable": True}
+                                {"type": datatype, "nullable": True}
                             ]
                         }
                     }
