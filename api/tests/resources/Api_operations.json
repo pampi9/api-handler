@@ -30,7 +30,7 @@
     "requestBody": null,
     "responses": {
       "200": {
-        "description": "List available items",
+        "description": "Post available items",
         "content": {
           "application/json": {
             "schema": {

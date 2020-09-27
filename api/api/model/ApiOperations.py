@@ -16,7 +16,7 @@ class ApiOperations:
         for part in parts:
             default_operation[part] = None
         for (method, details) in resource.items():
-            self.operations[method] = default_operation
+            self.operations[method] = default_operation.copy()
             for part in parts:
                 if part in details:
                     self.operations[method][part] = details[part]

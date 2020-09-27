@@ -14,4 +14,6 @@ def test_constructor():
     config = JsonHandler.read_json(RESOURCES["existing_api"])
     api_operations = ApiOperations(config["paths"]["/GetItems"])
     expected = JsonHandler.read_json(RESOURCES["existing_operations"])
+    for method in api_operations.operations.keys():
+        assert api_operations.operations[method] == expected[method]
     assert api_operations.operations == expected

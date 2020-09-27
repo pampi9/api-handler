@@ -98,8 +98,8 @@ class ApiRequest:
         args = []
         if "parameters" in self.endpoint_definition and self.endpoint_definition["parameters"] is not None:
             for parameter in self.endpoint_definition["parameters"]:
-                # TODO: Handle parameter in header, path
-                if parameter["in"] == "query":
+                # TODO: Handle parameter in path
+                if parameter["in"] == "query" or parameter["in"] == "header":
                     arg = ApiRequest.get_formatted_param_in_query(parameters, parameter)
                     if arg is not None:
                         args.append(arg)
@@ -168,6 +168,9 @@ class ApiRequest:
         try:
             if self.check_response(str(response.status_code)):
                 schema = self.__get_response_schema(str(response.status_code), "application/json")
+                if schema is None:
+                    print("Response code {} undefined!".format(response.status_code))
+                    schema = {}
                 schema["components"] = {"schemas": {}}
                 if self.components is not None and "schemas" in self.components:
                     schema["components"]["schemas"] = self.components["schemas"]
@@ -209,8 +212,7 @@ class ApiRequest:
         :param body: body to send
         :return: std response
         """
-        # Empty because this is only the interface definition
-        pass
+        raise NotImplementedError
 
 
 class ApiPostRequest(ApiRequest):
