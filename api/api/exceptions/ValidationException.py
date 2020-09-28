@@ -1,4 +1,3 @@
-# TODO: add user-defined exceptions for the validation
 import jsonschema
 
 

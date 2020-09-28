@@ -36,13 +36,6 @@ class ApiRequest:
         # Components definition
         self.components = None
         # TODO: schema validation of parameters and body
-        # "post": {
-        #   "RequestBody": {
-        #       "content": "application/json"
-        #       "schema": {
-        #           $ref: "#/components/schemas/User"
-        #       }
-        #   }
 
     @staticmethod
     def create_request(api, endpoint, request_type):
@@ -98,7 +91,7 @@ class ApiRequest:
         args = []
         if "parameters" in self.endpoint_definition and self.endpoint_definition["parameters"] is not None:
             for parameter in self.endpoint_definition["parameters"]:
-                # TODO: Handle parameter in path
+                # TODO: Handle parameter["in"]="path"
                 if parameter["in"] == "query" or parameter["in"] == "header":
                     arg = ApiRequest.get_formatted_param_in_query(parameters, parameter)
                     if arg is not None:
@@ -137,7 +130,6 @@ class ApiRequest:
             raise RequestException.MissingRequiredParameterException(
                 "Required parameter '{}' is missing!".format(parameter["name"]))
         elif parameter["name"] not in parameters:
-            # TODO: check if additional parameter is given (not in OpenApi Specs)
             raise RequestException.IgnoredParameterException("Parameter '{}' is ignored!".format(parameter["name"]))
         else:
             return {parameter["name"]: parameters[parameter["name"]]}

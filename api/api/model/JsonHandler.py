@@ -58,7 +58,6 @@ class JsonHandler:
 
     @staticmethod
     def validate(json_object, json_schema, validation_type=None):
-        # TODO: check us of validation (True/False, "Error msg")
         """
         Validate jsonObject against jsonSchema
         :param json_object: json object to check
