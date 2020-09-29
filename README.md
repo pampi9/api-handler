@@ -6,6 +6,8 @@ Python API handling based on a json configuration file (OpenAPI Specification 3.
 | --- | --- |
 | [py-openapi-schema-to-json-schema](https://github.com/pglass/py-openapi-schema-to-json-schema) | MIT license |
 
+Install `py-openapi-schema-to-json-schema` w/ `python setup.py build && python setup.py install`
+
 # Content
 - API-server mock
 - API-client
