@@ -253,8 +253,18 @@ class ApiPutRequest(ApiRequest):
     """
 
     def call(self, url, body=None):
-        # TODO: implement for PUT request
-        pass
+        if url is not None:
+            try:
+                response = requests.put(url=url, auth=self.authentication.authentication_func, json=body)
+                error_flag = False
+            except (requests.exceptions.InvalidURL, requests.exceptions.ConnectionError):
+                # TODO: Adjust response for Exception handling
+                response = MockResponse({}, 500)
+                error_flag = True
+        else:
+            response = None
+            error_flag = True
+        return self.process_response(url, response, error_flag)
 
 
 class ApiDeleteRequest(ApiRequest):
@@ -263,5 +273,15 @@ class ApiDeleteRequest(ApiRequest):
     """
 
     def call(self, url, body=None):
-        # TODO: implement for DELETE request
-        pass
+        if url is not None:
+            try:
+                response = requests.delete(url=url, auth=self.authentication.authentication_func)
+                error_flag = False
+            except (requests.exceptions.InvalidURL, requests.exceptions.ConnectionError):
+                # TODO: Adjust response for Exception handling
+                response = MockResponse({}, 500)
+                error_flag = True
+        else:
+            response = None
+            error_flag = True
+        return self.process_response(url, response, error_flag)
