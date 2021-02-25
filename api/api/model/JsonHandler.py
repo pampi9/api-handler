@@ -1,8 +1,9 @@
 import json
-import os
-import traceback
 
 import jsonschema
+import logging
+import os
+import traceback
 
 from ..exceptions.ValidationException import ApiDefinitionValidationException
 from ..exceptions.ValidationException import BodyValidationException
@@ -27,10 +28,10 @@ class JsonHandler:
                 resources = json.load(json_file)
             return resources
         except FileNotFoundError:
-            print("File {} not found!".format(filename))
-            print("File in ./:")
+            logging.error("File {} not found!".format(filename))
+            logging.debug("File in ./:")
             for file in os.scandir("."):
-                print(file.name)
+                logging.debug(file.name)
             return {}
 
     @staticmethod
@@ -52,8 +53,8 @@ class JsonHandler:
                 return False
         except IOError:
             traceback.print_stack()
-            print(json_object)
-            print("Something went wrong!")
+            logging.warning(json_object)
+            logging.warning("Something went wrong!")
             return False
 
     @staticmethod
